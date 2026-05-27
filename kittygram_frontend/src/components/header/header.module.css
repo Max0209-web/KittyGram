@@ -1,0 +1,77 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 100px;
+  box-shadow: inset 0px -1px 0px var(--header-shadow);
+  margin: 0 auto;
+}
+
+.logo {
+  width: 40px;
+  height: 32px;
+}
+
+.btns_box {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.hidden {
+  display: none;
+}
+
+.collectionsLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  background-color: #FF8C00; /* Оранжевый */
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+  height: 36px; /* Фиксированная высота */
+  box-sizing: border-box;
+}
+
+.collectionsLink:hover {
+  background-color: #E67600; /* Темнее при наведении */
+  transform: translateY(-1px);
+}
+
+@media screen and (max-width: 900px) {
+  .header {
+    padding: 15px 40px;
+  }
+
+  .btns_box {
+    gap: 20px;
+  }
+}
+
+@media screen and (max-width: 540px) {
+  .header {
+    padding: 12px 14px;
+  }
+
+  .btns_box {
+    gap: 10px;
+  }
+
+  .collectionsLink {
+    padding: 6px 12px;
+    font-size: 12px;
+    height: 32px;
+  }
+}
+.collectionsLink {
+  background-color: #FF8C00;
+}
+
+.collectionsLink:hover {
+  background-color: #E67600;
+}

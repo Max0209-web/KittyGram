@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "Kittygram Lost Cats",
+    "description": "Проверочные запросы к REST API сервиса объявлений о потерянных и найденных котах.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1 - Регистрация пользователя",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"username\": \"lost_helper\",\n  \"password\": \"qwerty123456\"\n}"},
+        "url": {"raw": "{{baseUrl}}/api/users/", "host": ["{{baseUrl}}"], "path": ["api", "users", ""]},
+        "description": "Создание пользователя для публикации объявлений."
+      },
+      "response": [{"name": "201 Created", "status": "Created", "code": 201, "body": "{\n  \"email\": \"\",\n  \"username\": \"lost_helper\",\n  \"id\": 2\n}"}]
+    },
+    {
+      "name": "2 - Получение токена",
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["const res = pm.response.json();", "if (res.auth_token) pm.collectionVariables.set('authToken', res.auth_token);"]}}],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"username\": \"lost_helper\",\n  \"password\": \"qwerty123456\"\n}"},
+        "url": {"raw": "{{baseUrl}}/api/token/login/", "host": ["{{baseUrl}}"], "path": ["api", "token", "login", ""]},
+        "description": "Получение токена авторизации."
+      },
+      "response": [{"name": "200 OK", "status": "OK", "code": 200, "body": "{\n  \"auth_token\": \"<token>\"\n}"}]
+    },
+    {
+      "name": "3 - Создание объявления о потерянном коте",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Token {{authToken}}"}],
+        "body": {"mode": "raw", "raw": "{\n  \"name\": \"Марта\",\n  \"color\": \"#FF8C00\",\n  \"birth_year\": 2021,\n  \"status\": \"lost\",\n  \"last_seen_place\": \"район Сокол, у метро\",\n  \"contact\": \"+7 900 111-22-33\",\n  \"description\": \"Рыжая кошка, зелёный ошейник, боится шума\"\n}"},
+        "url": {"raw": "{{baseUrl}}/api/cats/", "host": ["{{baseUrl}}"], "path": ["api", "cats", ""]},
+        "description": "Публикация объявления. Владелец подставляется автоматически из токена."
+      },
+      "response": [{"name": "201 Created", "status": "Created", "code": 201, "body": "{\n  \"id\": 5,\n  \"name\": \"Марта\",\n  \"status\": \"lost\",\n  \"last_seen_place\": \"район Сокол, у метро\",\n  \"contact\": \"+7 900 111-22-33\"\n}"}]
+    },
+    {
+      "name": "4 - Список объявлений без токена",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw": "{{baseUrl}}/api/cats/", "host": ["{{baseUrl}}"], "path": ["api", "cats", ""]},
+        "description": "Гость может просматривать объявления."
+      },
+      "response": [{"name": "200 OK", "status": "OK", "code": 200, "body": "{\n  \"count\": 1,\n  \"results\": [\n    {\"id\": 5, \"name\": \"Марта\", \"status\": \"lost\"}\n  ]\n}"}]
+    },
+    {
+      "name": "5 - Создание группы поиска",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Token {{authToken}}"}],
+        "body": {"mode": "raw", "raw": "{\n  \"name\": \"Поиск в районе Сокол\",\n  \"description\": \"Объявления рядом с метро и парком\",\n  \"category\": \"district\"\n}"},
+        "url": {"raw": "{{baseUrl}}/api/collections/", "host": ["{{baseUrl}}"], "path": ["api", "collections", ""]},
+        "description": "Создание группы объявлений по району."
+      },
+      "response": [{"name": "201 Created", "status": "Created", "code": 201, "body": "{\n  \"id\": 3,\n  \"name\": \"Поиск в районе Сокол\",\n  \"category\": \"district\"\n}"}]
+    },
+    {
+      "name": "6 - Добавление объявления в группу",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Token {{authToken}}"}],
+        "body": {"mode": "raw", "raw": "{\n  \"cat_id\": 5\n}"},
+        "url": {"raw": "{{baseUrl}}/api/collections/3/add_cat/", "host": ["{{baseUrl}}"], "path": ["api", "collections", "3", "add_cat", ""]},
+        "description": "Владелец группы добавляет объявление в группу поиска."
+      },
+      "response": [{"name": "200 OK", "status": "OK", "code": 200, "body": "{\n  \"detail\": \"Котик добавлен в группу поиска\"\n}"}]
+    },
+    {
+      "name": "7 - Фильтрация объявлений по статусу",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw": "{{baseUrl}}/api/cats/?status=lost", "host": ["{{baseUrl}}"], "path": ["api", "cats", ""], "query": [{"key": "status", "value": "lost"}]},
+        "description": "Фильтр показывает только потерянных котов."
+      },
+      "response": [{"name": "200 OK", "status": "OK", "code": 200, "body": "{\n  \"count\": 1,\n  \"results\": [{\"name\": \"Марта\", \"status\": \"lost\"}]\n}"}]
+    },
+    {
+      "name": "8 - Отрицательный кейс: год рождения в будущем",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Token {{authToken}}"}],
+        "body": {"mode": "raw", "raw": "{\n  \"name\": \"Кот из будущего\",\n  \"color\": \"#000000\",\n  \"birth_year\": 2030,\n  \"status\": \"lost\",\n  \"last_seen_place\": \"неизвестно\",\n  \"contact\": \"+7 900 000-00-00\"\n}"},
+        "url": {"raw": "{{baseUrl}}/api/cats/", "host": ["{{baseUrl}}"], "path": ["api", "cats", ""]},
+        "description": "Сервер должен вернуть 400 Bad Request."
+      },
+      "response": [{"name": "400 Bad Request", "status": "Bad Request", "code": 400, "body": "{\n  \"birth_year\": [\"Ensure this value is less than or equal to 2026.\"]\n}"}]
+    },
+    {
+      "name": "9 - Отрицательный кейс: нет токена",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw": "{{baseUrl}}/api/users/me/", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", ""]},
+        "description": "Профиль пользователя без токена недоступен."
+      },
+      "response": [{"name": "401 Unauthorized", "status": "Unauthorized", "code": 401, "body": "{\n  \"detail\": \"Authentication credentials were not provided.\"\n}"}]
+    }
+  ]
+}

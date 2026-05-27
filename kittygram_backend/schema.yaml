@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: Kittygram Lost Cats API
+  version: 1.0.0
+  description: REST API для объявлений о потерянных и найденных котах.
+servers:
+  - url: http://127.0.0.1:8000
+paths:
+  /api/users/:
+    post:
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: Пользователь создан
+  /api/token/login/:
+    post:
+      summary: Получение токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Токен создан
+  /api/cats/:
+    get:
+      summary: Список объявлений
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [lost, found, returned]
+        - in: query
+          name: place
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Список объявлений
+    post:
+      summary: Создать объявление
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatRequest"
+      responses:
+        "201":
+          description: Объявление создано
+        "400":
+          description: Ошибка валидации
+        "401":
+          description: Нет токена
+  /api/cats/{id}/:
+    get:
+      summary: Детали объявления
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Детали объявления
+        "404":
+          description: Не найдено
+    patch:
+      summary: Обновить объявление
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatRequest"
+      responses:
+        "200":
+          description: Объявление обновлено
+        "403":
+          description: Нет прав
+    delete:
+      summary: Удалить объявление
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Удалено
+        "403":
+          description: Нет прав
+  /api/collections/:
+    get:
+      summary: Список групп поиска
+      responses:
+        "200":
+          description: Список групп
+    post:
+      summary: Создать группу поиска
+      security:
+        - TokenAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionRequest"
+      responses:
+        "201":
+          description: Группа создана
+  /api/collections/{id}/add_cat/:
+    post:
+      summary: Добавить объявление в группу
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cat_id]
+              properties:
+                cat_id:
+                  type: integer
+      responses:
+        "200":
+          description: Объявление добавлено
+        "403":
+          description: Нет прав
+components:
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Token <auth_token>"
+  parameters:
+    Id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+  schemas:
+    CatRequest:
+      type: object
+      required: [name, color, birth_year, status, last_seen_place, contact]
+      properties:
+        name:
+          type: string
+          example: Марта
+        color:
+          type: string
+          example: "#FF8C00"
+        birth_year:
+          type: integer
+          example: 2021
+        status:
+          type: string
+          enum: [lost, found, returned]
+          example: lost
+        last_seen_place:
+          type: string
+          example: район Сокол, у метро
+        contact:
+          type: string
+          example: "+7 900 111-22-33"
+        description:
+          type: string
+          example: Рыжая кошка, зелёный ошейник, боится шума
+        image:
+          type: string
+          description: data:image/...;base64
+    CollectionRequest:
+      type: object
+      required: [name, category]
+      properties:
+        name:
+          type: string
+          example: Поиск в районе Сокол
+        description:
+          type: string
+          example: Объявления по району и ближайшим улицам
+        category:
+          type: string
+          enum: [lost, found, urgent, district, returned, other]
+          example: district
