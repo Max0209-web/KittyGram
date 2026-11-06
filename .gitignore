@@ -1,0 +1,14 @@
+# Local data and credentials
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-*
+*.db
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/
+build/
+media/
